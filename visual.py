@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import cv2
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -40,10 +39,7 @@ for i in range(num_nodes):
     for j in range(num_nodes):
         distance_matrix[i, j] = euclidean_distance(black_pixel_coordinates[i], black_pixel_coordinates[j])
 
-# plt.imshow(bw_img, cmap='hot')
-# plt.show()
-
-permutation, distance = solve_tsp_dynamic_programming(distance_matrix)
+permutation, distance = solve_tsp_local_search(distance_matrix)
 
 global index, data
 data  = np.zeros((X_range, Y_range))
