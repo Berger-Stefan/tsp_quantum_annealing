@@ -44,8 +44,7 @@ for i in range(num_nodes):
 
 for i in range(num_nodes):
     for j in range(num_nodes):
-        G.add_weighted_edges_from([(i,j,distance_matrix[i,j])])
-
+        G.add_edge(i,j,length=distance_matrix[i,j])
 
 # --- Problem formulation ---
 Q = dnx.traveling_salesman_qubo(G)
@@ -54,7 +53,7 @@ chainstrength = 8
 numruns = 10
 print("Starting sampler")
 sampler = EmbeddingComposite(DWaveSampler(token="kAWe-bd81b032df883596474d0f5d590bd37b3467a591"))
-print("Sampler finished, starting copmutation")
+print("Sampler finished, starting computation")
 response = sampler.sample_qubo(Q,
                                chain_strength=chainstrength,
                                num_reads=numruns,
@@ -63,4 +62,3 @@ response = sampler.sample_qubo(Q,
 dwave.inspector.show(response)
 df = response.to_pandas_dataframe().sort_values('energy').reset_index(drop=True)
 df.to_csv('tsp_results.csv', index=False)
-

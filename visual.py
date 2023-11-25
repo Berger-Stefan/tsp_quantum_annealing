@@ -44,7 +44,7 @@ for i in range(num_nodes):
 
 for i in range(num_nodes):
     for j in range(num_nodes):
-        G.add_weighted_edges_from([(i,j,distance_matrix[i,j])])
+        G.add_edge(i,j,length=distance_matrix[i,j])
 
 # pos = nx.spring_layout(G)
 # nx.draw_networkx(G,pos=pos)
