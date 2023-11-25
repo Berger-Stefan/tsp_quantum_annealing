@@ -8,7 +8,7 @@ from python_tsp.heuristics import solve_tsp_local_search, simulated_annealing
 from python_tsp.exact import solve_tsp_dynamic_programming
 
 ## Parameters
-rescale_factor = 0.1
+rescale_factor = 0.05
 
 img         = cv2.imread("cats.png") 
 X_range, Y_range, _ = img.shape
@@ -44,36 +44,54 @@ for i in range(num_nodes):
 
 for i in range(num_nodes):
     for j in range(num_nodes):
-        G.add_edge(i,j,length=distance_matrix[i,j])
+        G.add_weighted_edges_from([(i,j,distance_matrix[i,j])])
 
-# pos = nx.spring_layout(G)
-# nx.draw_networkx(G,pos=pos)
 
 permutation, distance = solve_tsp_local_search(distance_matrix)
 
-global index, data
-data  = np.zeros((X_range, Y_range))
-index = 0
-# Create a figure and axis for plotting
-fig, ax = plt.subplots()
-im = ax.imshow(data, cmap='hot')
+# print(permutation)
+# print(black_pixel_coordinates)
 
-# Function to update the plot
-def update_plot(frame):
-    global index, data
-    if index < len(permutation):
-        x,y = black_pixel_coordinates[permutation[index]]
-        data[x,y] = -1
-        im = ax.imshow(data, cmap='hot')
-        index = index + 1
-    else:
-        im = ax.imshow(data, cmap='hot')
+# for i,(x,y) in enumerate(black_pixel_coordinates):
+#     plt.scatter(x,y)
 
-    return im,
+# for i in range(len(black_pixel_coordinates)):
+#     plt.annotate(str(i),(black_pixel_coordinates[i][0], black_pixel_coordinates[i][1]))
 
-# Set up the animation
-num_frames = np.linspace(0,len(black_pixel_coordinates))
-ani = FuncAnimation(fig, update_plot, frames=num_frames, interval=10, blit=True)
+# plt.show()
 
-# Display the animation
+G_plot = nx.DiGraph()
+G_plot.add_nodes_from(np.arange(len(black_pixel_coordinates)))
+
+for i in range(len(permutation)-1):
+    G_plot.add_edge(permutation[i],permutation[i+1])
+
+nx.draw(G_plot,black_pixel_coordinates)
 plt.show()
+
+# global index, data
+# data  = np.zeros((X_range, Y_range))
+# index = 0
+# # Create a figure and axis for plotting
+# fig, ax = plt.subplots()
+# im = ax.imshow(data, cmap='hot')
+#
+# # Function to update the plot
+# def update_plot(frame):
+#     global index, data
+#     if index < len(permutation):
+#         x,y = black_pixel_coordinates[permutation[index]]
+#         data[x,y] = -1
+#         im = ax.imshow(data, cmap='hot')
+#         index = index + 1
+#     else:
+#         im = ax.imshow(data, cmap='hot')
+#
+#     return im,
+#
+# # Set up the animation
+# num_frames = np.linspace(0,len(black_pixel_coordinates))
+# ani = FuncAnimation(fig, update_plot, frames=num_frames, interval=10, blit=True)
+#
+# # Display the animation
+# plt.show()

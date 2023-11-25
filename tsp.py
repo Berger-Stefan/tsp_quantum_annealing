@@ -7,9 +7,11 @@ import dwave_networkx as dnx
 from dwave.system.samplers import DWaveSampler
 from dwave.system.composites import EmbeddingComposite
 import dwave.inspector
+import dimod
+import matplotlib.pyplot as plt
 
 ## Parameters
-rescale_factor = 0.1
+rescale_factor = 0.05
 
 # --- Graph formulation ---
 img         = cv2.imread("cats.png") 
@@ -44,13 +46,17 @@ for i in range(num_nodes):
 
 for i in range(num_nodes):
     for j in range(num_nodes):
-        G.add_edge(i,j,length=distance_matrix[i,j])
+        if i != j:
+            G.add_weighted_edges_from([(i,j,distance_matrix[i,j])])
 
 # --- Problem formulation ---
 Q = dnx.traveling_salesman_qubo(G)
 
-chainstrength = 8
-numruns = 10
+#result = dnx.traveling_salesperson(G, dimod.ExactSolver(), start=0) 
+#print(result)
+
+chainstrength = 23
+numruns = 1000
 print("Starting sampler")
 sampler = EmbeddingComposite(DWaveSampler(token="kAWe-bd81b032df883596474d0f5d590bd37b3467a591"))
 print("Sampler finished, starting computation")
@@ -62,3 +68,15 @@ response = sampler.sample_qubo(Q,
 dwave.inspector.show(response)
 df = response.to_pandas_dataframe().sort_values('energy').reset_index(drop=True)
 df.to_csv('tsp_results.csv', index=False)
+
+df.iloc[0,:]
+
+
+G_plot = nx.DiGraph()
+G_plot.add_nodes_from(np.arange(len(black_pixel_coordinates)))
+
+for i in range(len(permutation)-1):
+    G_plot.add_edge(permutation[i],permutation[i+1])
+
+nx.draw(G_plot,black_pixel_coordinates)
+plt.show()
