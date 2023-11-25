@@ -8,7 +8,7 @@ from python_tsp.heuristics import solve_tsp_local_search, simulated_annealing
 from python_tsp.exact import solve_tsp_dynamic_programming
 
 ## Parameters
-rescale_factor = 0.3
+rescale_factor = 0.1
 
 img         = cv2.imread("cats.png") 
 X_range, Y_range, _ = img.shape
@@ -21,11 +21,14 @@ bw_img      = cv2.resize(bw_img, new_size)
 
 black_pixel_coordinates = [(x, y) for x in range(bw_img.shape[0]) for y in range(bw_img.shape[1]) if bw_img[x, y] == 0]
 
-print(bw_img.shape)
-print(len(black_pixel_coordinates))
+print(f"Shape of the domain {bw_img.shape}")
+print(f"Number of pixels {len(black_pixel_coordinates)}")
+#plt.imshow(bw_img)
+#plt.show()
+
 
 G = nx.Graph()
-G.add_nodes_from(black_pixel_coordinates)
+G.add_nodes_from(np.arange(len(black_pixel_coordinates)))
 
 def euclidean_distance(point1, point2):
     return np.sqrt((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)
@@ -39,6 +42,13 @@ for i in range(num_nodes):
     for j in range(num_nodes):
         distance_matrix[i, j] = euclidean_distance(black_pixel_coordinates[i], black_pixel_coordinates[j])
 
+for i in range(num_nodes):
+    for j in range(num_nodes):
+        G.add_weighted_edges_from([(i,j,distance_matrix[i,j])])
+
+# pos = nx.spring_layout(G)
+# nx.draw_networkx(G,pos=pos)
+
 permutation, distance = solve_tsp_local_search(distance_matrix)
 
 global index, data
@@ -51,11 +61,14 @@ im = ax.imshow(data, cmap='hot')
 # Function to update the plot
 def update_plot(frame):
     global index, data
-    x,y = black_pixel_coordinates[permutation[index]]
-    data[x,y] = -1
-    im = ax.imshow(data, cmap='hot')
-    #im.set_array(data)
-    index = index + 1
+    if index < len(permutation):
+        x,y = black_pixel_coordinates[permutation[index]]
+        data[x,y] = -1
+        im = ax.imshow(data, cmap='hot')
+        index = index + 1
+    else:
+        im = ax.imshow(data, cmap='hot')
+
     return im,
 
 # Set up the animation
