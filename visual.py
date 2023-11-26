@@ -6,9 +6,10 @@ from matplotlib.animation import FuncAnimation
 from functools import partial
 from python_tsp.heuristics import solve_tsp_local_search, simulated_annealing
 from python_tsp.exact import solve_tsp_dynamic_programming
+import matplotlib.animation as animation 
 
 ## Parameters
-rescale_factor = 0.05
+rescale_factor = 0.3
 
 img         = cv2.imread("cats.png") 
 X_range, Y_range, _ = img.shape
@@ -60,38 +61,34 @@ permutation, distance = solve_tsp_local_search(distance_matrix)
 
 # plt.show()
 
-G_plot = nx.DiGraph()
-G_plot.add_nodes_from(np.arange(len(black_pixel_coordinates)))
+# G_plot = nx.DiGraph()
+# G_plot.add_nodes_from(np.arange(len(black_pixel_coordinates)))
 
-for i in range(len(permutation)-1):
-    G_plot.add_edge(permutation[i],permutation[i+1])
+# for i in range(len(permutation)-1):
+#     G_plot.add_edge(permutation[i],permutation[i+1])
 
-nx.draw(G_plot,black_pixel_coordinates)
-plt.show()
-
-# global index, data
-# data  = np.zeros((X_range, Y_range))
-# index = 0
-# # Create a figure and axis for plotting
-# fig, ax = plt.subplots()
-# im = ax.imshow(data, cmap='hot')
-#
-# # Function to update the plot
-# def update_plot(frame):
-#     global index, data
-#     if index < len(permutation):
-#         x,y = black_pixel_coordinates[permutation[index]]
-#         data[x,y] = -1
-#         im = ax.imshow(data, cmap='hot')
-#         index = index + 1
-#     else:
-#         im = ax.imshow(data, cmap='hot')
-#
-#     return im,
-#
-# # Set up the animation
-# num_frames = np.linspace(0,len(black_pixel_coordinates))
-# ani = FuncAnimation(fig, update_plot, frames=num_frames, interval=10, blit=True)
-#
-# # Display the animation
+# nx.draw(G_plot,black_pixel_coordinates)
 # plt.show()
+
+global index, data
+data  = np.zeros((X_range, Y_range))
+index = 0
+# Create a figure and axis for plotting
+fig, ax = plt.subplots()
+im = ax.imshow(data, cmap='hot')
+
+# Function to update the plot
+def update_plot(frame):
+    global index, data
+    x,y = black_pixel_coordinates[permutation[index]]
+    data[x,y] = -1
+    im = ax.imshow(data, cmap='hot')
+    index = index + 1
+
+    return im,
+
+# Set up the animation
+num_frames = len(permutation)
+ani = FuncAnimation(fig, update_plot, frames=num_frames, interval=10, blit=True)
+
+ani.save('aninmation.mp4', writer="ffmpeg", fps=15)

@@ -3,6 +3,7 @@ import pandas as pd
 import cv2
 import networkx as nx
 
+import itertools
 import dwave_networkx as dnx
 from dwave.system.samplers import DWaveSampler
 from dwave.system.composites import EmbeddingComposite
@@ -50,12 +51,63 @@ for i in range(num_nodes):
             G.add_weighted_edges_from([(i,j,distance_matrix[i,j])])
 
 # --- Problem formulation ---
-Q = dnx.traveling_salesman_qubo(G)
+# Q = dnx.traveling_salesman_qubo(G)
+N = num_nodes
+distance = distance_matrix
 
-#result = dnx.traveling_salesperson(G, dimod.ExactSolver(), start=0) 
-#print(result)
+max_dist = max(np.max(distance, axis=0))
+alpha = ((N**3 - 2*N**2 + N)*max_dist + 1e-3)
+beta = ((N**2 + 1)*alpha) + 1e-3
+#Q_mat = np.zeros((N,N))
+A_mat = np.zeros((N,N))
 
-chainstrength = 23
+def concator(A,B,N,row):
+    order_list = []
+    for i in range(N):
+        if i == row:
+            order_list.append(A)
+        else:
+            mat = np.zeros((N,N))
+            for i in range(N):
+                for j in range(N):
+                    mat[i,j] = i * B[i,j]
+            order_list.append(mat)
+    return order_list
+
+for i in range(N):
+    for j in range(N):
+        if i == j:
+            A_mat[i,j] = -alpha
+        else:
+            A_mat[i,j] = beta
+
+block = np.zeros((N,N))
+for i in range(N):
+    for j in range(N):
+        if i == j:
+            block[i,j] = 2*alpha
+        else:
+            block[i,j] = -1 / (distance[i,j]**1.7)
+
+full_order_list = []
+
+for j in range(N):
+    row_array = np.concatenate(concator(A_mat, block, N, j), axis=0)
+    full_order_list.append(row_array)
+
+Q = np.concatenate(full_order_list, axis=1)
+Q -= Q.mean(axis=0)
+qmax = max(np.max(Q, axis=0))
+for i in range(N**2):
+    for j in range(N**2):
+        Q[i,j] *= (1/qmax)
+        
+Q = dnx.traveling_salesperson(G, dimod.ExactSolver(), start=0) 
+
+plt.imshow(Q)
+plt.show()
+
+chainstrength = 100
 numruns = 1000
 print("Starting sampler")
 sampler = EmbeddingComposite(DWaveSampler(token="kAWe-bd81b032df883596474d0f5d590bd37b3467a591"))
@@ -69,8 +121,14 @@ dwave.inspector.show(response)
 df = response.to_pandas_dataframe().sort_values('energy').reset_index(drop=True)
 df.to_csv('tsp_results.csv', index=False)
 
-df.iloc[0,:]
 
+permutation = []
+for i in range(N):
+    for j in range(N):
+        if df[0][j+i*N] == 1:
+            permutation.append(j)
+
+print(f"Permuation: {permutation}")
 
 G_plot = nx.DiGraph()
 G_plot.add_nodes_from(np.arange(len(black_pixel_coordinates)))
